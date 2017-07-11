@@ -9,6 +9,7 @@ import hashlib
 import requests
 from lxml import etree
 from selenium import webdriver
+from datetime import datetime
 
 from util.config import IN_MEM_MINUTES
 from util.logger import Logger
@@ -31,6 +32,15 @@ header = {'Connection': 'keep-alive',
 def create_id():
     m = hashlib.md5(str(clock()).encode('utf-8'))
     return m.hexdigest()
+
+
+def current_time():
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
+def convert_time(span):
+    return datetime.strptime(span, '%Y-%m-%d %H:%M:%S')
+
 
 def check_http_proxy(http_queue, times):
     for i in range(times):
