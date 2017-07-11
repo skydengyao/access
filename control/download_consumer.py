@@ -11,6 +11,8 @@ from core.download import download_pdf_url, download_html_with_doi
 from core.download import download_html_with_pbmd, get_html_pbmd, download_ncbi_pbmd
 from core.download import download_sci_url
 from util.logger import Logger
+from util.info import HeaderInfo
+from util.utils import dispatch_sleep_time
 
 log = Logger(__name__, 'logs/download_consume.log').getLogger()
 
@@ -19,6 +21,7 @@ class DownloadConsume(RabbitMQConsumer):
     def __init__(self, data_base, table_name, queue_name, q):
         RabbitMQConsumer.__init__(self, queue_name, q)
         self.mysql = MySQLClient(data_base, table_name)
+        self.header = HeaderInfo(q)  # 采用普通的头部信息
 
     def start_consuming(self):
         self.add_on_cancel_callback()
@@ -34,7 +37,7 @@ class DownloadConsume(RabbitMQConsumer):
         ret = False
         try:
             if self.queue_name == DOWNLOADPDF:
-                ret = download_pdf_url(uid, url)
+                ret = download_pdf_url(uid, url, param["header"])
             elif self.queue_name == DOWNLOADDOI:
                 # ret = download_html_with_doi(uid, url, param["proxy"], param["header"])
                 pass
@@ -75,6 +78,9 @@ class DownloadConsume(RabbitMQConsumer):
                 pass
         except Exception as e:
             log.debug("download %s failed" % url)
+
+        sleep(dispatch_sleep_time()*2)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     def consume(self):
         self.conn = self.connect()

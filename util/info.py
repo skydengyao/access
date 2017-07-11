@@ -56,6 +56,10 @@ class HeaderInfo(object):
         self.header['Accept-Encoding'] = 'gzip, deflate, br'
         self.header['accept-language'] = 'zh-CN,zh;q=0.8'
 
+    def get_header(self):
+        self.set_header()
+        return self.header
+
 
 class GoogleScholarHeader(HeaderInfo):
     def __init__(self, agent_queue):

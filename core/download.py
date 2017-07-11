@@ -13,12 +13,12 @@ TIMEOUT = 30
 log = Logger(__name__, "logs/download.log").getLogger()
 
 
-def download_pdf_url(uid, url):
+def download_pdf_url(uid, url, headers):
     """
     根据URL下载文档
     """
     try:
-        r = requests.get(url, timeout=TIMEOUT)
+        r = requests.get(url, headers=headers, timeout=TIMEOUT)
         print('status: ', r.status_code)
         print(r.headers)
         r.raise_for_status()
