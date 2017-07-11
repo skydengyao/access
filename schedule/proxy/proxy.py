@@ -14,7 +14,7 @@ from util.utils import dispatch_sleep_time
 from proxy.core.getproxy import GetProxy
 from proxy.core.proxymanager import ProxyManager
 
-log = Logger(__name__, "proxy_schedule.log").getLogger()
+log = Logger(__name__, "logs/proxy_schedule.log").getLogger()
 
 
 class ProxySchedule(ProxyManager):

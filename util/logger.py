@@ -4,7 +4,7 @@ import logging
 
 
 class Logger(object):
-    def __init__(self, name, log_name="crawler.log"):
+    def __init__(self, name, log_name="default.log"):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 

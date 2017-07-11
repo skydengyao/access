@@ -8,7 +8,7 @@ from util.utils import get_html_text, get_html_tree, open_browser
 from util.utils import header, dispatch_sleep_time
 from util.logger import Logger
 
-log = Logger(__name__, "get_proxy.log").getLogger()
+log = Logger(__name__, "logs/get_proxy.log").getLogger()
 
 
 class GetProxy(object):

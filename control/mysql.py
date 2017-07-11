@@ -1,11 +1,9 @@
 # _*_ coding: utf-8 _*_
 
 import pymysql
-from datetime import datetime
-from datetime import timedelta
 
 from util.config import MYSQL, MIDDLE, LAGBEHIND
-from util.utils import create_id, current_time, convert_time
+from util.utils import create_id, current_time
 
 
 class MySQLClient(object):
@@ -114,7 +112,7 @@ class DataClient(MySQLClient):
         sql = 'select * from %s order by timestamp asc limit 1' % self.table
         count = self.cur.execute(sql)
         if count > 0:
-            ret = self.cur.f
+            ret = self.cur.fetchone()
             uid = ret[0]
             param = {"q": ret[1], "hl": ret[2], "oq": ret[3],
                      "start": ret[4], "as_sdt": 0}
@@ -126,16 +124,5 @@ class DataClient(MySQLClient):
 
 
 if __name__ == "__main__":
-    # mc = MySQLClient("info", "paper")
-    # mc.find("title", "author", "journal", ("hello", "author", "jou"))
-
-    from datetime import datetime
-    from datetime import timedelta
-    # span = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    span = datetime.now()
-    t = '2017-07-10 12:33:34'
-    test = datetime.strptime(t, '%Y-%m-%d %H:%M:%S')
-    delta = span - test
-    if delta > timedelta(hours=2):
-        print('well')
-    print("span: ", span)
+    mc = MySQLClient("info", "paper")
+    mc.find("title", "author", "journal", ("hello", "author", "journal"))
