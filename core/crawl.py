@@ -13,7 +13,7 @@ from control.mysql import MySQLClient, CacheClient, DataClient
 
 requests.packages.urllib3.disable_warnings()
 
-log = Logger(__name__, log_name="crawl.log").getLogger()
+log = Logger(__name__, log_name="logs/crawl.log").getLogger()
 
 
 class GoogleScholarCrawl(object):

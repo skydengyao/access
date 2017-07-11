@@ -10,7 +10,7 @@ from util.logger import Logger
 
 TIMEOUT = 30
 
-log = Logger(__name__, "download.log").getLogger()
+log = Logger(__name__, "logs/download.log").getLogger()
 
 
 def download_pdf_url(uid, url):

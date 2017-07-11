@@ -16,7 +16,7 @@ from util.logger import Logger
 from control.mongodb import DEFAULT_FIELD
 
 requests.packages.urllib3.disable_warnings()
-log = Logger(__name__, "utils.log").getLogger()
+log = Logger(__name__, "logs/utils.log").getLogger()
 
 
 header = {'Connection': 'keep-alive',

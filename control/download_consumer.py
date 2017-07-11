@@ -12,7 +12,7 @@ from core.download import download_html_with_pbmd, get_html_pbmd, download_ncbi_
 from core.download import download_sci_url
 from util.logger import Logger
 
-log = Logger(__name__, 'download_consume.log').getLogger()
+log = Logger(__name__, 'logs/download_consume.log').getLogger()
 
 
 class DownloadConsume(RabbitMQConsumer):
