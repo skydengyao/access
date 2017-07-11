@@ -5,12 +5,11 @@ import re
 from uuid import uuid4
 
 from util.config import BASE_URL, DOWNLOADPDF, DOWNLOADHTML, PAGES
-from util.config import PRIORI, MIDDLE, LAGBEHIND
 from util.logger import Logger
 from util.utils import get_tree, split_elements
 from util.utils import check_url_type
 from control.rabbit_producer import ProduceService
-from control.mysql import MySQLClient, MessageClient
+from control.mysql import MySQLClient, CacheClient, DataClient
 
 requests.packages.urllib3.disable_warnings()
 
@@ -25,7 +24,9 @@ class GoogleScholarCrawl(object):
         self.params = message.get("param", None)
         self.start = self.params.get("start", 0) if self.params else 0
         self.db = MySQLClient("info", "paper")
-        self.message = MessageClient("info", "message")
+        self.middle = CacheClient("info", "middle", 0)
+        self.lagbehind = CacheClient("info", "lagbehind", 1)
+        self.message = DataClient("info", "message")
 
     def get(self):
         if not self.params:
@@ -34,10 +35,13 @@ class GoogleScholarCrawl(object):
         tree = get_tree(url=BASE_URL, params=self.params, proxies=self.proxies, headers=self.headers)
         if type(tree) == str:  # 访问失败
             if self.start == 0:
-                producer = ProduceService(MIDDLE)
-                produce_value = {"param": self.params}
-                producer.produce(produce_value)
-                self.message.insert(self.params)
+                is_find = self.middle.find('start', 'q', 'oq', self.params)
+                if not is_find: # 数据库中不存在该记录
+                    self.middle.insert(self.params)
+
+                is_find = self.message.find('start', 'q', 'oq', self.params)
+                if not is_find:
+                    self.message.insert(self.params)
             log.debug("search %s data failed" % self.params.get("q"))
         else:
             elements = tree.xpath('.//div[@id="gs_bdy"]//div[@class="gs_r"]')
@@ -45,19 +49,19 @@ class GoogleScholarCrawl(object):
                 self.process_element(element)
 
             if self.start == 0:  # 第一次时需要传递消息
-                producer = ProduceService(LAGBEHIND)
-                produce_value = {"param": self.params}
-                producer.produce(produce_value)
+                is_find = self.lagbehind.find('start', 'q', 'oq', self.params)
+                if not is_find:
+                    self.lagbehind.insert(self.params)
+
+                is_find = self.message.find('start', 'q', 'oq', self.params)
+                if not is_find:
+                    self.message.insert(self.params)
 
         if 0 < self.start < PAGES:  # 处于设置的范围内，则转发请求
-            producer = ProduceService(MIDDLE)  # 向消息队列转发下一页请求
-            self.params["start"] = self.start+10
-            produce_value = {"param": self.params}
-            producer.produce(produce_value)
-            #
-            # is_find = self.message.find('start', 'q', 'oq', self.params)
-            # if not is_find:
-            #     self.message.insert(self.params)
+            is_find = self.middle.find('start', 'q', 'oq', self.params)
+            if not is_find:
+                self.params["start"] = self.start + 10
+                self.middle.insert(self.params)
 
     def process_element(self, element):
         try:
