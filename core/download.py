@@ -27,6 +27,9 @@ def download_pdf_url(uid, url, headers):
         r = requests.get(url, headers=headers, timeout=TIMEOUT)
         status = r.status_code
         print('status: ', r.status_code)
+        if status == 429: # 遇到多次请求则直接返回
+            return False
+
         r.raise_for_status()
         pdf = uid + '.pdf'
         path = BASE_DIR + pdf

@@ -45,7 +45,7 @@ MYSQL = {"host": "localhost", "user": "guest", "password": "123456@Guest"}
 MINIMUM_SIZE = 30
 
 # IP代理调度函数
-PROXY_SERVICE = ["kdldiff_proxy", "doublesix_proxy", "goubanjia_proxy",
+PROXY_SERVICE = ["kdldiff_proxy", "doublesix_proxy", "goubanjia_proxy", "cool_proxy", "free_proxy",
                  "data5u_proxy", "ipaddress_proxy", "us_proxy", "ip181_proxy", "db_proxy",
                  "swei360_proxy", "ip3366_proxy", "ssl_proxy", "listplus_proxy", "listplushttp_proxy"]
 

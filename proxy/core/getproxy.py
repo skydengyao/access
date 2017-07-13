@@ -270,6 +270,40 @@ class GetProxy(object):
             sleep(dispatch_sleep_time()*2)
 
 
+    @staticmethod
+    def cool_proxy(number=5):
+        url = "http://www.cool-proxy.net/proxies/http_proxy_list/sort:score/direction:desc/page:{page}"
+        for page in range(1, number):
+            target = url.format(page=page)
+            br = open_browser(target)
+            try:
+                proxy_list = br.find_elements_by_xpath('.//div[@id="main"]/table/tbody/tr')
+                for proxy in proxy_list[1:]:
+                    sub_list = [sub.text for sub in proxy.find_elements_by_xpath('./td')]
+                    yield ':'.join(sub_list[0:2])
+            except Exception as e:
+                log.debug("%s get xpath failed" % target)
+            br.close()
+            sleep(dispatch_sleep_time()*2)
+
+    @staticmethod
+    def free_proxy(number=5):
+        url = "https://free-proxy-list.com/?page={page}&port=&up_time=0"
+        for page in range(1, number):
+            target = url.format(page=page)
+            br = open_browser(target)
+            try:
+                proxy_list = br.find_elements_by_xpath(
+                    './/div[@class="section"]/div[@class="table-responsive"]//tbody/tr')
+                for proxy in proxy_list:
+                    sub = proxy.find_elements_by_xpath('./td')[0]
+                    yield ':'.join([sub.find_element_by_xpath('./a').text, "80"])  # 默认端口为80
+            except Exception as e:
+                log.debug("%s get xpath failed" % target)
+            br.close()
+            sleep(dispatch_sleep_time()*2)
+
+
 if __name__ == "__main__":
     # for e in GetProxy.doublesix_proxy():
     #     print(e)
@@ -329,5 +363,11 @@ if __name__ == "__main__":
     # for e in GetProxy.ssl_proxy():
     #     print(e)
 
-    for e in GetProxy.db_proxy():
+    # for e in GetProxy.db_proxy():
+    #     print(e)
+
+    # for e in GetProxy.cool_proxy():
+    #     print(e)
+
+    for e in GetProxy.free_proxy():
         print(e)
