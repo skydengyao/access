@@ -1,4 +1,4 @@
-# _*_ coding: utf-8 _*_
+# _*_ coding:utf-8 _*_
 
 from threading import Thread
 from queue import Queue
@@ -15,7 +15,7 @@ def schedule(name, queue):
 
 
 if __name__ == "__main__":
-    for i in range(3):
+    for i in range(2):
         p = Thread(target=schedule, args=(PRIORI, QUEUE,))
         p.start()
 
@@ -23,6 +23,6 @@ if __name__ == "__main__":
         p = Thread(target=schedule, args=(MIDDLE, QUEUE,))
         p.start()
 
-    for i in range(2):
+    for i in range(1):
         p = Thread(target=schedule, args=(LAGBEHIND, QUEUE,))
         p.start()

@@ -24,8 +24,7 @@ class GoogleScholarCrawl(object):
         self.params = message.get("param", None)
         self.start = self.params.get("start", 0) if self.params else 0
         self.db = MySQLClient("info", "paper")
-        self.middle = CacheClient("info", "middle", 0)
-        self.lagbehind = CacheClient("info", "lagbehind", 1)
+        self.cache = CacheClient("info", "middle")
         self.message = DataClient("info", "message")
 
     def get(self):
@@ -35,9 +34,9 @@ class GoogleScholarCrawl(object):
         tree = get_tree(url=BASE_URL, params=self.params, proxies=self.proxies, headers=self.headers)
         if type(tree) == str:  # 访问失败
             if self.start == 0:
-                is_find = self.middle.find('start', 'q', 'oq', self.params)
+                is_find = self.cache.find('start', 'q', 'oq', self.params)
                 if not is_find: # 数据库中不存在该记录
-                    self.middle.insert(self.params)
+                    self.cache.insert(self.params)
 
                 is_find = self.message.find('start', 'q', 'oq', self.params)
                 if not is_find:
@@ -49,10 +48,6 @@ class GoogleScholarCrawl(object):
                 self.process_element(element)
 
             if self.start == 0:  # 第一次时需要传递消息
-                is_find = self.lagbehind.find('start', 'q', 'oq', self.params)
-                if not is_find:
-                    self.lagbehind.insert(self.params)
-
                 is_find = self.message.find('start', 'q', 'oq', self.params)
                 if not is_find:
                     self.message.insert(self.params)
@@ -60,7 +55,7 @@ class GoogleScholarCrawl(object):
         if 0 < self.start < PAGES:  # 处于设置的范围内，则转发请求
             is_find = self.middle.find('start', 'q', 'oq', self.params)
             if not is_find:
-                self.params["start"] = self.start + 10
+                self.params["start"] = self.start+10
                 self.middle.insert(self.params)
 
     def process_element(self, element):

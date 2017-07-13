@@ -10,8 +10,7 @@ class MySQLClient(object):
     def __init__(self, data_base, table_name):
         self.conn = pymysql.connect(host=MYSQL.get("host"), port=3306,
                                     user=MYSQL.get("user"), passwd=MYSQL.get("password"),
-                                    db=data_base,
-                                    charset='utf8')
+                                    db=data_base, charset='utf8')
         self.table = table_name
         self.cur = self.conn.cursor()
 
@@ -50,10 +49,9 @@ class MySQLClient(object):
 
 
 class CacheClient(MySQLClient):
-    def __init__(self, data_base, table_name, mode=0):
+    def __init__(self, data_base, table_name):
         MySQLClient.__init__(self, data_base, table_name)
-        self.delta = 2 if mode == 0 else 4
-        self.name = MIDDLE if mode == 0 else LAGBEHIND
+        self.delta = 2
 
     def insert(self, param):
         params = (create_id(), param.get('q'), param.get('hl'),
@@ -76,8 +74,7 @@ class CacheClient(MySQLClient):
         if count > 0:
             ret = self.cur.fetchone()
             uid = ret[0]
-            param = {"q": ret[1], "hl": ret[2], "oq": ret[3],
-                     "start": ret[4], "as_sdt": 0}
+            param = {"q": ret[1], "hl": ret[2], "oq": ret[3], "start": ret[4], "as_sdt": 0}
             self.delete(uid)
             return param
         else:
@@ -87,6 +84,7 @@ class CacheClient(MySQLClient):
 class DataClient(MySQLClient):
     def __init__(self, data_base, table_name):
         MySQLClient.__init__(self, data_base, table_name)
+        self.delta = 4
 
     def insert(self, param):
         params = (create_id(), param.get('q'), param.get('hl'),
@@ -109,20 +107,22 @@ class DataClient(MySQLClient):
         self.conn.commit()
 
     def fetch_and_update(self):
-        sql = 'select * from %s order by timestamp asc limit 1' % self.table
+        sql = 'select * from %s where timestamp < date_sub(now(), interval %s hour) order by timestamp asc limit 1' % (self.table, self.delta)
         count = self.cur.execute(sql)
         if count > 0:
             ret = self.cur.fetchone()
             uid = ret[0]
-            param = {"q": ret[1], "hl": ret[2], "oq": ret[3],
-                     "start": ret[4], "as_sdt": 0}
+            param = {"q": ret[1], "hl": ret[2], "oq": ret[3], "start": ret[4], "as_sdt": 0}
             self.update(uid)
             return param
         else:
             return None
 
 
-
 if __name__ == "__main__":
-    mc = MySQLClient("info", "paper")
-    mc.find("title", "author", "journal", ("hello", "author", "journal"))
+    cache = CacheClient("info", "middle")
+    while True:
+        param = cache.fetch_and_delete()
+        if param:
+            print("param ： ", param)
+

@@ -145,7 +145,7 @@ def capacity_schedule(q, name=RAW_PROXY):
 def crawl(q, name=RAW_PROXY):
     spider_schedule(name)
     schedule = BackgroundScheduler()
-    schedule.add_job(func=capacity_schedule, args=(q, name, ), trigger='interval', minutes=10)
+    schedule.add_job(func=capacity_schedule, args=(q, name, ), trigger='interval', minutes=7)
     schedule.start()
 
 

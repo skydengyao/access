@@ -6,8 +6,9 @@ import json
 from control.rabbit_consumer import RabbitMQConsumer
 from control.rabbit_producer import RabbitMQProducer
 from control.mysql import MySQLClient
-from util.config import DOWNLOADPDF, DOWNLOADHTML, DOWNLOADNCBI, DOWNLOADDOI, DOWNLOADPMID, PDF2TXT
-from core.download import download_pdf_url, download_html_with_doi
+from util.config import DOWNLOADPDF, DOWNLOADHTML, DOWNLOADNCBI, DOWNLOADDOI, \
+    DOWNLOADPMID, PDF2TXT, DOWNLOADBRW
+from core.download import download_pdf_url, download_html_with_doi, browser_download
 from core.download import download_html_with_pbmd, get_html_pbmd, download_ncbi_pbmd
 from core.download import download_sci_url
 from util.logger import Logger
@@ -18,10 +19,11 @@ log = Logger(__name__, 'logs/download_consume.log').getLogger()
 
 
 class DownloadConsume(RabbitMQConsumer):
-    def __init__(self, data_base, table_name, queue_name, q):
+    def __init__(self, data_base, table_name, queue_name, q, number=0):
         RabbitMQConsumer.__init__(self, queue_name, q)
         self.mysql = MySQLClient(data_base, table_name)
         self.header = HeaderInfo(q)  # 采用普通的头部信息
+        self.number = number
 
     def start_consuming(self):
         self.add_on_cancel_callback()
@@ -36,8 +38,13 @@ class DownloadConsume(RabbitMQConsumer):
         pmid = param.get("pmid", None)
         ret = False
         try:
-            if self.queue_name == DOWNLOADPDF:
+            if self.queue_name == DOWNLOADPDF: # 直连下载模式
                 ret = download_pdf_url(uid, url, param["header"])
+                if not ret: # 转发至直接采用浏览器访问模式
+                    browser_producer = RabbitMQProducer(DOWNLOADBRW)
+                    browser_producer.produce(param)
+            elif self.queue_name == DOWNLOADBRW: # 浏览器下载
+                ret = browser_download(uid, url, str(self.number))
             elif self.queue_name == DOWNLOADDOI:
                 # ret = download_html_with_doi(uid, url, param["proxy"], param["header"])
                 pass
@@ -50,7 +57,7 @@ class DownloadConsume(RabbitMQConsumer):
                 #     producer = RabbitMQProducer(DOWNLOADNCBI)
                 #     producer.produce(param)
                 pass
-            elif self.queue_name == DOWNLOADHTML:
+            elif self.queue_name == DOWNLOADHTML: # SCI_HUB访问URL方式
                 ret = download_sci_url(uid, url, param["proxy"], param["header"])
                 if not ret:
                     doi_producer = RabbitMQProducer(DOWNLOADDOI)

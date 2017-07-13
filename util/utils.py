@@ -1,6 +1,7 @@
 # _*_ coding: utf-8 _*_
 
 import re
+import os
 from random import uniform
 from time import sleep
 from time import time
@@ -10,7 +11,7 @@ import requests
 from lxml import etree
 from selenium import webdriver
 from datetime import datetime
-
+import shutil
 from util.config import IN_MEM_MINUTES
 from util.logger import Logger
 from control.mongodb import DEFAULT_FIELD
@@ -34,12 +35,40 @@ def create_id():
     return m.hexdigest()
 
 
+def check_directory(base, sub):
+    path = os.path.join(base, sub)
+    if not os.path.exists(path):
+        os.mkdir(path)
+    return path
+
+
+def update_download_file(base, path, id):
+    try:
+        files = os.listdir(path)
+        for f in files:
+            if f.endswith('.pdf'):
+                shutil.move(os.path.join(path, f), os.path.join(base, (id+'.pdf')))
+        shutil.rmtree(path)
+    except Exception as e:
+        log.debug("update %s failed" % path)
+
+
+def wait_for_download(path):
+    try:
+        times = 3
+        while times >= 0:
+            files = os.listdir(path)
+            for f in files:
+                if f.endswith('.pdf'):
+                    return
+            sleep(10)
+            times = times-1
+    except Exception as e:
+        log.debug("wait % download failed" %path)
+
+
 def current_time():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-
-def convert_time(span):
-    return datetime.strptime(span, '%Y-%m-%d %H:%M:%S')
 
 
 def check_http_proxy(http_queue, times):
@@ -86,7 +115,6 @@ def get_html_tree(url, **kwargs):
         return etree.HTML(html)
     except Exception as e:
         log.debug("access %s failed" % url)
-        # return r.status_code
         return "404"
 
 
@@ -95,11 +123,9 @@ def get_html_text(url, **kwargs):
         r = requests.get(url, headers=header, timeout=30)
         r.raise_for_status()  # 针对 40X 或 50X 抛出异常
         r.encoding = r.apparent_encoding
-        # print("value: ", r.text)
         return r.text
     except Exception as e:
         log.debug("access %s failed" % url)
-        # return r.status_code
         return "404"
 
 
@@ -171,18 +197,12 @@ def check_url_type(url):
 
 
 if __name__ == "__main__":
-    text = """
-    <h1>Improved Survival with Vemurafenib in Melanoma with BRAF V600E Mutation</h1>
-    <p class="authors">
-    <p class="citationLine">
-    <span class="citation">N Engl J Med 2011; 364:2507-2516</span>
-    <a href="/toc/nejm/364/26/">June 30, 2011</a>
-    <span class="doi">DOI: 10.1056/NEJMoa1103782</span>
-    </p>
-    """
-    # regex = r"[DOI|dio]:\s+?([0-9a-zA-Z./]*)"
-    # ret = re.findall(regex, text)
-    # print(ret)
-
-    text = 'hewoll  woosls , sklsl.d ,,,s 2004,.**&&& hell'
-    print(get_digits(text))
+    #url = 'https://www.researchgate.net/profile/Robert_Steen/publication/14988409_A_genetic_linkage_map_of_the_mouse_current_applications_and_future_prospects/links/0deec5165ac5d7ea6a000000/A-genetic-linkage-map-of-the-mouse-current-applications-and-future-prospects.pdf'
+    url = 'https://www.researchgate.net/profile/Frank_Sharp/publication/11276136_Genomic_responses_of_the_brain_to_ischemic_stroke_intracerebral_haemorrhage_kainate_seizures_hypoglycemia_and_hypoxia/links/591e082eaca272d31bcda35a/Genomic-responses-of-the-brain-to-ischemic-stroke-intracerebral-haemorrhage-kainate-seizures-hypoglycemia-and-hypoxia.pdf'
+    url = 'https://www.researchgate.net/profile/Rudi_Beschorner/publication/11350831_Infiltrating_CD14_monocytes_and_expression_of_CD14_by_activated_parenchymal_microgliamacrophages_contribute_to_the_pool_of_CD14_cells_in_ischemic_brain_lesions/links/0fcfd50c9c3ecc34cc000000.pdf'
+    try:
+        r = requests.get(url)
+        print('status code: ', r.status_code)
+        r.raise_for_status()
+    except Exception as e:
+        print("here now")

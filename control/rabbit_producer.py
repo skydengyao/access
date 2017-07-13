@@ -36,11 +36,9 @@ class RabbitMQProducer(object):
         print("message: ", message)
         try:
             self.publish_message(message)
-            print("publish")
         except pika.exceptions:
             self.reconnect()
             self.publish_message(message)
-            print("publish2")
 
     def close(self):
         if self.conn:
@@ -73,4 +71,4 @@ if __name__ == "__main__":
             text = {"param": data.set_request()}
             producer = ProduceService(name)
             producer.produce(text)
-        time.sleep(60)
+        time.sleep(25)
