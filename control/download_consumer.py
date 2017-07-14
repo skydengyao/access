@@ -5,7 +5,7 @@ import json
 
 from control.rabbit_consumer import RabbitMQConsumer
 from control.rabbit_producer import RabbitMQProducer
-from control.mysql import MySQLClient
+from control.mysql import MySQLClient, DownloadClient
 from util.config import DOWNLOADPDF, DOWNLOADHTML, DOWNLOADNCBI, DOWNLOADDOI, \
     DOWNLOADPMID, PDF2TXT, DOWNLOADBRW
 from core.download import download_pdf_url, download_html_with_doi, browser_download
@@ -22,6 +22,7 @@ class DownloadConsume(RabbitMQConsumer):
     def __init__(self, data_base, table_name, queue_name, q, number=0):
         RabbitMQConsumer.__init__(self, queue_name, q)
         self.mysql = MySQLClient(data_base, table_name)
+        self.download = DownloadClient(data_base, "download", 0)
         self.header = HeaderInfo(q)  # 采用普通的头部信息
         self.number = number
 
@@ -38,12 +39,13 @@ class DownloadConsume(RabbitMQConsumer):
         pmid = param.get("pmid", None)
         ret = False
         try:
-            if self.queue_name == DOWNLOADPDF: # 直连下载模式
-                ret = download_pdf_url(uid, url, param["header"])
-                if not ret: # 转发至直接采用浏览器访问模式
-                    browser_producer = RabbitMQProducer(DOWNLOADBRW)
-                    browser_producer.produce(param)
-            elif self.queue_name == DOWNLOADBRW: # 浏览器下载
+            if self.queue_name == DOWNLOADPDF:  # 直连下载模式
+                ret, status = download_pdf_url(uid, url, param["header"])
+                if not ret and status == 429 or status == 408 or status == 401:  # 转发至直接采用浏览器访问模式
+                    is_find = self.download.find("title", "url", param, 0)
+                    if not is_find:  # 若是未查询到相同数据
+                        self.download.insert(param, 0)
+            elif self.queue_name == DOWNLOADBRW:  # 浏览器下载
                 ret = browser_download(uid, url, str(self.number))
             elif self.queue_name == DOWNLOADDOI:
                 # ret = download_html_with_doi(uid, url, param["proxy"], param["header"])
@@ -57,14 +59,12 @@ class DownloadConsume(RabbitMQConsumer):
                 #     producer = RabbitMQProducer(DOWNLOADNCBI)
                 #     producer.produce(param)
                 pass
-            elif self.queue_name == DOWNLOADHTML: # SCI_HUB访问URL方式
-                ret = download_sci_url(uid, url, param["proxy"], param["header"])
-                if not ret:
-                    doi_producer = RabbitMQProducer(DOWNLOADDOI)
-                    doi_producer.produce(param)
-
-                    pmid_producer = RabbitMQProducer(DOWNLOADPMID)
-                    pmid_producer.produce(param)
+            elif self.queue_name == DOWNLOADHTML:  # SCI_HUB访问URL方式
+                ret, status = download_sci_url(uid, url, param["proxy"], param["header"])
+                if not ret and status == 429 or status == 408 or status == 401 or status == 0:
+                    is_find = self.download.find("title", "url", param, 1)
+                    if not is_find:
+                        self.download.insert(self.param, 1)
             elif self.queue_name == DOWNLOADNCBI:
                 if pmid:  # 获取有效PMID
                     ret = download_ncbi_pbmd(uid, pmid, param["proxy"], param["header"])

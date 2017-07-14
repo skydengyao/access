@@ -28,17 +28,17 @@ def download_pdf_url(uid, url, headers):
         status = r.status_code
         print('status: ', r.status_code)
         if status == 429: # 遇到多次请求则直接返回
-            return False
+            return False, status
 
         r.raise_for_status()
         pdf = uid + '.pdf'
         path = BASE_DIR + pdf
         with open(path, "wb") as f:
             f.write(r.content)
-        return True
+        return True, status
     except Exception as e:
         log.debug("access %s failed with status %s" %(url, status))
-        return False
+        return False, status
 
 
 def browser_download(uid, url, number='0'):
@@ -122,23 +122,27 @@ def get_sci_url_pdf(url, proxy, header):
     """
     将目标URL直接采用SCI_HUB进行请求访问
     :param url:目标URL
-    :param proxy: 代理
+    :param proxy: 代理信息
     :param header: 头部信息
     :return:
     """
     status = 0
     try:
         url = SCI_HUB + url
+        if not proxy:  # 为避免代理未及时获取造成后续请求需要验证的问题
+            return None, status
+
         r = requests.get(url, proxies=proxy, headers=header, timeout=TIMEOUT)
         status = r.status_code
         r.raise_for_status
         html = r.content
         tree = etree.HTML(html)
         pdf_url = tree.xpath('.//div[@id="content"]/iframe/@src')[0]
-        return pdf_url
+        if pdf_url.endswith('pdf'):
+            return pdf_url, status
     except Exception as e:
         log.debug("access %s failed with status %s" %(url, status))
-        return None
+    return None, status
 
 
 def download_sci_url(uid, url, proxy, header):
@@ -150,10 +154,10 @@ def download_sci_url(uid, url, proxy, header):
     :param header: 头部信息
     :return:
     """
-    pdf_url = get_sci_url_pdf(url, proxy, header)
+    pdf_url, status = get_sci_url_pdf(url, proxy, header)
     if pdf_url:
         return download_pdf_url(uid, pdf_url)
-    return False
+    return False, status
 
 
 def get_html_doi(url):
@@ -277,10 +281,5 @@ def download_ncbi_pbmd(uid, pbmd, proxy, header):
 
 
 if __name__ == '__main__':
-
-    url = 'https://www.researchgate.net/profile/Vivekananda_Sunkari/publication/' \
-          '259456487_Selective_blockade_of_estrogen_receptor_beta_improves_wound_' \
-          'healing_in_diabetes/links/00b7d532250039187c000000/Selective-blockade-of-estrogen-' \
-          'receptor-beta-improves-wound-healing-in-diabetes.pdf'
-    browser_download(url, '0', '0')
+    url = 'http://sci-hub.cc/http://pubs.acs.org/doi/full/10.1021/bi060305b'
 
