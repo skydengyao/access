@@ -119,6 +119,39 @@ class DataClient(MySQLClient):
             return None
 
 
+class DownloadClient(MySQLClient):
+    def __init__(self, data_base, table_name):
+        MySQLClient.__init__(self, data_base, table_name)
+
+    def insert(self, param, mode):
+        params = (param.get('id'), param.get('title'), param.get('url'), param.get('author'),
+                  param.get('journal'), mode, current_time())
+        sql_list = ["insert into", self.table, "values(%s, %s, %s, %s, %s, %s, %s)"]
+        sql = ' '.join(sql_list)
+        self.cur.execute(sql, params)
+        self.conn.commit()
+
+    def find(self, title, url, param, mode):
+        params = (param.get('title'), param.get('url'))
+        sql = 'select id from %s where %s = "%s" and %s = "%s" and mode = "%s"' % (self.table, title, params[0], url, params[1], mode)
+        count = self.cur.execute(sql)
+        return True if count > 0 else False
+
+    def fetch_and_delete(self, mode):
+        sql = 'select * from %s where mode = "%s" order by timestamp asc limit 1' % (self.table, mode)
+        count = self.cur.execute(sql)
+        if count > 0:
+            ret = self.cur.fetchone()
+            uid = ret[0]
+            self.delete(uid)
+
+            value = {"id": uid, "title": ret[1], "url": ret[2],
+                     "author": ret[3], "journal": ret[4]}
+            return value
+        else:
+            return None
+
+
 if __name__ == "__main__":
     cache = CacheClient("info", "middle")
     while True:
