@@ -131,6 +131,7 @@ def get_html_text(url, **kwargs):
 
 def open_browser(url, **kwargs):
     br = webdriver.Chrome()
+    br.implicitly_wait(30)
     try:
         br.get(url)
         return br
@@ -148,7 +149,7 @@ def check_valid_proxy(proxy):
             return True
         return False
     except Exception as e:
-        log.debug("test google with proxy %s failed" % proxy)
+        log.debug("checkout google with proxy %s failed" % proxy)
         return False
 
 

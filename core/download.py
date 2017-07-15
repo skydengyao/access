@@ -59,6 +59,7 @@ def browser_download(uid, url, number='0'):
 
     path = check_directory(BASE_DIR, number)
     br = webdriver.Chrome(chrome_options=options)
+    br.implicitly_wait(TIMEOUT)
     try:
         br.get(url)
         wait_for_download(path)

@@ -2,12 +2,11 @@
 
 import pika
 import json
-from time import sleep
 
 from proxy.core.proxymanager import ProxyManager
 from util.config import AUTHENTICATE, RABBITMQ, VALID_PROXY, QUEUE
 from util.config import PRIORI_CPUTIME, MIDDLE_CPUTIME, LAGBEHIND_CPUTIME
-from util.config import PRIORI, MIDDLE, LAGBEHIND
+from util.config import PRIORI
 from util.config import EXCHANGE, EXCHANGE_TYPE
 from util.info import GoogleScholarHeader
 from core.crawl import GoogleScholarCrawl
@@ -76,7 +75,8 @@ class RabbitMQConsumer(object):
 
     def start_consuming(self):
         self.add_on_cancel_callback()
-        self._consumer_tag = self.channel.basic_consume(self.on_message, self.queue_name, no_ack=False)
+        self._consumer_tag = self.channel.basic_consume(self.on_message, self.queue_name,
+                                                        no_ack=False)
 
     def add_on_cancel_callback(self):
         self.channel.add_on_cancel_callback(self.on_consumer_cancelled)

@@ -5,7 +5,6 @@ from threading import Thread
 
 from control.mysql import CacheClient, DataClient, DownloadClient
 from control.rabbit_producer import ProduceService
-from util.utils import dispatch_sleep_time
 from util.config import MIDDLE, LAGBEHIND, DOWNLOADBRW, DOWNLOADHTML
 
 
@@ -16,7 +15,7 @@ def schedule(db, table):
         if param:
             producer = ProduceService(table)
             producer.produce(param)
-        sleep(dispatch_sleep_time())
+        sleep(10)
 
 
 def trigger(db, table):
@@ -26,7 +25,7 @@ def trigger(db, table):
         if param:
             producer = ProduceService(LAGBEHIND)
             producer.produce(param)
-        sleep(dispatch_sleep_time())
+        sleep(10)
 
 
 def download(db, table, mode):
@@ -39,7 +38,7 @@ def download(db, table, mode):
             else:
                 producer = ProduceService(DOWNLOADHTML)
             producer.produce(param)
-        sleep(dispatch_sleep_time()*2)
+        sleep(10)
 
 
 if __name__ == '__main__':

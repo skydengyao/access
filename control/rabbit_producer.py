@@ -33,7 +33,7 @@ class RabbitMQProducer(object):
 
     def run(self, message):
         message = json.dumps(message).encode(encoding="utf-8") if isinstance(message, (list, dict)) else message
-        print("message: ", message)
+        print("message: %s and queue %s" %(message, self.queue_name))
         try:
             self.publish_message(message)
         except pika.exceptions:

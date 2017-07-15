@@ -22,7 +22,7 @@ class DownloadConsume(RabbitMQConsumer):
     def __init__(self, data_base, table_name, queue_name, q, number=0):
         RabbitMQConsumer.__init__(self, queue_name, q)
         self.mysql = MySQLClient(data_base, table_name)
-        self.download = DownloadClient(data_base, "download", 0)
+        self.download = DownloadClient(data_base, "download")
         self.header = HeaderInfo(q)  # 采用普通的头部信息
         self.number = number
 
