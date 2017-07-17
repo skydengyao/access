@@ -15,7 +15,7 @@ def schedule(db, table):
         if param:
             producer = ProduceService(table)
             producer.produce(param)
-        sleep(10)
+        sleep(3)
 
 
 def trigger(db, table):
@@ -25,7 +25,7 @@ def trigger(db, table):
         if param:
             producer = ProduceService(LAGBEHIND)
             producer.produce(param)
-        sleep(10)
+        sleep(3)
 
 
 def download(db, table, mode):
@@ -33,12 +33,13 @@ def download(db, table, mode):
     while True:
         param = load.fetch_and_delete(mode)
         if param:
+            producer = None
             if mode == 0:
                 producer = ProduceService(DOWNLOADBRW)
             else:
                 producer = ProduceService(DOWNLOADHTML)
             producer.produce(param)
-        sleep(10)
+        sleep(3)
 
 
 if __name__ == '__main__':

@@ -153,9 +153,9 @@ class DownloadClient(MySQLClient):
 
 
 if __name__ == "__main__":
-    cache = CacheClient("info", "middle")
+    cache = DownloadClient("info", "download")
     while True:
-        param = cache.fetch_and_delete()
+        param = cache.fetch_and_delete(1)
         if param:
             print("param ： ", param)
 

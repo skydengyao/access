@@ -86,10 +86,12 @@ class RabbitMQConsumer(object):
             self.channel.close()
 
     def on_message(self, ch, method, properties, body):
+        params = {}
         param = json.loads(body.decode("utf-8"))
-        param["proxy"] = self.db.get()
-        param["header"] = self.header.get_header()
-        crawler = GoogleScholarCrawl(param)
+        params["param"] = param
+        params["proxy"] = self.db.get()
+        params["header"] = self.header.get_header()
+        crawler = GoogleScholarCrawl(params)
         crawler.get()
         ch.basic_ack(delivery_tag=method.delivery_tag)
 

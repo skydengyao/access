@@ -29,6 +29,14 @@ class GoogleScholarCrawl(object):
 
     def get(self):
         if not self.params:
+            print("parmas : ", self.params)
+            return
+
+        if not self.proxies: # 避免暴露自身IP地址
+            print("proxy: ", self.proxies)
+            is_find = self.cache.find('start', 'q', 'oq', self.params)
+            if not is_find:  # 数据库中不存在该记录
+                self.cache.insert(self.params)
             return
 
         tree = get_tree(url=BASE_URL, params=self.params, proxies=self.proxies, headers=self.headers)
@@ -42,6 +50,7 @@ class GoogleScholarCrawl(object):
                 if not is_find:
                     self.message.insert(self.params)
             log.debug("search %s data failed" % self.params.get("q"))
+            return  # 返回不进行后续处理
         else:
             elements = tree.xpath('.//div[@id="gs_bdy"]//div[@class="gs_r"]')
             for element in elements:
@@ -51,12 +60,12 @@ class GoogleScholarCrawl(object):
                 is_find = self.message.find('start', 'q', 'oq', self.params)
                 if not is_find:
                     self.message.insert(self.params)
-
+        print("test")
         if 0 < self.start < PAGES:  # 处于设置的范围内，则转发请求
-            is_find = self.middle.find('start', 'q', 'oq', self.params)
+            is_find = self.cache.find('start', 'q', 'oq', self.params)
             if not is_find:
                 self.params["start"] = self.start+10
-                self.middle.insert(self.params)
+                self.cache.insert(self.params)
 
     def process_element(self, element):
         try:
