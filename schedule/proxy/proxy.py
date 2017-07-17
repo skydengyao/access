@@ -62,7 +62,6 @@ class UpdateSchedule(object):
             value = self.get_value()
             if value:
                 if check_valid_proxy(value) and not self.valid_db.find(value):
-                    print("update proxy")
                     self.valid_db.put(value)
                 else:
                     log.debug('valid Proxy for %s validation fail' % value.get("proxy"))
@@ -74,7 +73,7 @@ def update(valid_name=VALID_PROXY, raw_name=RAW_PROXY):
     schedule.update_schedule()
 
 
-def update_proxy(valid_name=VALID_PROXY, raw_name=RAW_PROXY, number=20):
+def update_proxy(valid_name=VALID_PROXY, raw_name=RAW_PROXY, number=10):
     for i in range(number):
         p = Thread(target=update, args=(valid_name, raw_name, ))
         p.start()
@@ -97,7 +96,7 @@ class ValidSchedule(ProxyManager):
 
                 if count <= -3:
                     self.delete(value)
-            sleep(dispatch_sleep_time()*2)  # 降低频繁访问
+            sleep(45)  # 降低频繁访问
 
 
 def valid(name=VALID_PROXY):
@@ -105,7 +104,7 @@ def valid(name=VALID_PROXY):
     schedule.valid_schedule()
 
 
-def valid_proxy(name=VALID_PROXY, number=20):
+def valid_proxy(name=VALID_PROXY, number=10):
     for i in range(number):
         p = Thread(target=valid, args=(name,))
         p.start()
@@ -123,7 +122,7 @@ class StatusSchedule(ProxyManager):
             if self.size <= MINIMUM_SIZE:
                 if self.q.empty():  # 当队列数据被清空时, 再次向队列添加信号
                     self.q.put(self.size)
-            sleep(dispatch_sleep_time()*5)
+            sleep(45)
 
 
 def status_proxy(q, name=VALID_PROXY):
@@ -131,7 +130,7 @@ def status_proxy(q, name=VALID_PROXY):
     schedule.schedule()
 
 
-def refresh(valid_name, raw_name, number=20):
+def refresh(valid_name, raw_name, number=10):
     update_proxy(valid_name, raw_name, number=number)
 
 
@@ -145,11 +144,11 @@ def capacity_schedule(q, name=RAW_PROXY):
 def crawl(q, name=RAW_PROXY):
     spider_schedule(name)
     schedule = BackgroundScheduler()
-    schedule.add_job(func=capacity_schedule, args=(q, name, ), trigger='interval', minutes=7)
+    schedule.add_job(func=capacity_schedule, args=(q, name, ), trigger='interval', minutes=10)
     schedule.start()
 
 
-def validate(q, name=VALID_PROXY, number=20):
+def validate(q, name=VALID_PROXY, number=5):
     valid_proxy(name, number=number)
     status_proxy(q, name)
 
@@ -157,5 +156,5 @@ def validate(q, name=VALID_PROXY, number=20):
 if __name__ == "__main__":
     q_status = Queue()
     crawl(q_status, RAW_PROXY)
-    refresh(VALID_PROXY, RAW_PROXY, 20)
-    validate(q_status, VALID_PROXY, 10)
+    refresh(VALID_PROXY, RAW_PROXY, 4)
+    validate(q_status, VALID_PROXY, 4)

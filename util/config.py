@@ -6,7 +6,7 @@ from queue import Queue
 QUEUE = Queue()
 
 # 存储目录
-BASE_DIR = '/home/liuyong/Documents/pdfs/'
+BASE_DIR = '/home/disk_mount/work_directory/all_users/liuyong/Documents/pdfs/'
 
 # 优先级调度睡眠时间
 PRIORI_CPUTIME = 3
@@ -36,7 +36,8 @@ RAW_PROXY = 'raw_proxy'
 # RabbitMQ 授权
 AUTHENTICATE = {"user": "liuyong", "password": "123456"}
 
-MONGODB = {"host": "localhost", "port": 27017, "table": "valid_proxy"}
+MONGODB = {"host": "localhost", "port": 27017, "table": "valid_proxy",
+           "user": "guest", "password": "123456@Guest"}
 RABBITMQ = {"host": "localhost", "port": 5672}
 REDIS = {"host": "localhost", "port": 6379}
 MYSQL = {"host": "localhost", "user": "guest", "password": "123456@Guest"}
@@ -45,9 +46,9 @@ MYSQL = {"host": "localhost", "user": "guest", "password": "123456@Guest"}
 MINIMUM_SIZE = 30
 
 # IP代理调度函数
-PROXY_SERVICE = ["kdldiff_proxy", "doublesix_proxy", "goubanjia_proxy", "cool_proxy", "free_proxy",
-                 "data5u_proxy", "ipaddress_proxy", "us_proxy", "ip181_proxy", "db_proxy",
-                 "swei360_proxy", "ip3366_proxy", "ssl_proxy", "listplus_proxy", "listplushttp_proxy"]
+PROXY_SERVICE = ["kdldiff_proxy", "doublesix_proxy", "listplushttp_proxy", "db_proxy",
+                 "data5u_proxy", "ipaddress_proxy", "us_proxy", "ip181_proxy",
+                 "swei360_proxy", "ip3366_proxy", "ssl_proxy", "listplus_proxy"]
 
 # 间隔时间
 IN_MEM_MINUTES = 3

@@ -1,16 +1,23 @@
 #  _*_ coding: utf-8 _*_
 
-import json
+try: # Python 3.X
+    from urllib.parse import quote_plus
+except ImportError: # Python 2.X
+    from urllib import quote_plus
+
 from random import choice
 from pymongo import MongoClient
+
 
 DEFAULT_FIELD = 'proxy'
 
 
 class MongoService(object):
-    def __init__(self, name, host, port):
+    def __init__(self, name, host, port, user, password):
         self.name = name  # 数据表名
-        self.client = MongoClient(host, port)
+        uri = "mongodb://%s:%s@%s:%s" %(quote_plus(user), quote_plus(password),
+                                        host, port)
+        self.client = MongoClient(uri)
         self.db = self.client.proxy  # 默认数据库名
 
     def get_all(self):
@@ -73,7 +80,7 @@ class MongoService(object):
 
 
 if __name__ == "__main__":
-    db = MongoService("valid_proxy", "localhost", 27017)
+    db = MongoService("valid_proxy", "localhost", 27017, "guest", "123456@Guest")
     from time import sleep
 
     while True:

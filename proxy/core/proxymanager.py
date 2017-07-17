@@ -6,7 +6,8 @@ from util.config import MONGODB, VALID_PROXY
 
 class ProxyManager(object):
     def __init__(self, table_name):
-        self.db = MongoService(table_name, MONGODB.get("host"), MONGODB.get("port"))
+        self.db = MongoService(table_name, MONGODB.get("host"), MONGODB.get("port"),
+                               MONGODB.get("user"), MONGODB.get("password"))
 
     def find(self, value):
         ret = self.db.find(value)
